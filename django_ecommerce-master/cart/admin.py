@@ -24,10 +24,12 @@ class AddressAdmin(admin.ModelAdmin):
         'zip_code',
         'address_type',
     ]
+@admin.register(Product)
+class ProductAdmin(admin.ModelAdmin):
+    prepopulated_fields = {"slug": ("title",)}
 
 
 admin.site.register(Order)
-admin.site.register(Product)
 admin.site.register(Payment)
 admin.site.register(Category)
 admin.site.register(OrderItem)
