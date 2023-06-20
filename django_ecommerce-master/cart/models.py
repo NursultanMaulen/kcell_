@@ -35,10 +35,14 @@ class Address(models.Model):
     address_line_2 = models.CharField(max_length=150)
     user = models.ForeignKey(to=User, on_delete=models.CASCADE)
     address_type = models.CharField(max_length=1, choices=ADDRESS_CHOICES)
-
+    slug2 = models.SlugField(max_length=255, default= 'ds')
     class Meta:
         verbose_name: str = 'Address'
         verbose_name_plural: str = 'Addresses'
+
+    def save(self, **kwargs):
+        self.slug2 = slugify(self.address_line_1)
+        super(Address, self).save(**kwargs)
 
     def __str__(self) -> str:
         return ', '.join([

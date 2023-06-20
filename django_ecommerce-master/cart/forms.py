@@ -1,6 +1,6 @@
 from django import forms
 from django.contrib.auth import get_user_model
-
+from django.utils.text import slugify
 from .models import (
     OrderItem,
     ColourVariation,

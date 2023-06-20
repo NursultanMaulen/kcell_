@@ -1,5 +1,6 @@
 import datetime
 import json
+# import django_filters
 from logging import getLogger
 from typing import Any, Dict, Union, List
 
@@ -13,6 +14,7 @@ from django.shortcuts import (get_object_or_404, reverse, redirect)
 from django.utils import timezone
 from django.views import generic
 from django.views.decorators.csrf import csrf_exempt
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 
 from .forms import (
     AddToCartForm,
@@ -35,11 +37,21 @@ logger = getLogger(__name__)
 stripe.api_key = settings.STRIPE_SECRET_KEY
 
 
+
 class ProductListView(generic.ListView):
     template_name: str = 'cart/product_list.html'
+    context_object_name = 'products'
+    paginate_by = 5
+    # filter_class = ProductListFilter
 
     def get_queryset(self):
         qs = Product.objects.all()
+        if 'min_price' in self.request.GET:
+            filter_price1 = self.request.GET.get('min_price')
+            filter_price2 = self.request.GET.get('max_price')
+            if filter_price1 == '':
+                filter_price1 = 0
+            qs = Product.objects.filter(price__range=(filter_price1, filter_price2))
         category = self.request.GET.get('category', None)
         if not category:
             return qs
@@ -52,6 +64,35 @@ class ProductListView(generic.ListView):
         context = super(ProductListView, self).get_context_data(**kwargs)
         context.update({"categories": Category.objects.values("name")})
         return context
+
+class FilterView(generic.ListView):
+    model = Product
+    template_name = 'product_list.html'
+    context_object_name = 'filter_results'
+
+    def get_queryset(self):
+        result = Product.objects.all()
+        if 'min_price' in self.request.GET:
+            filter_price1 = self.request.GET.get('min_price')
+            filter_price2 = self.request.GET.get('max_price')
+            if filter_price1 == '':
+                filter_price1 = 0
+            result = Product.objects.filter(price__range=(filter_price1, filter_price2))
+        return result
+class SearchView(generic.ListView):
+    model = Product
+    template_name = 'product_list.html'
+    context_object_name = 'all_search_results'
+
+    def get_queryset(self):
+       result = Product.objects.all()
+       query = self.request.GET.get('search')
+       if query:
+          postresult = Product.objects.filter(title__contains=query)
+          result = postresult
+       else:
+           result = None
+       return result
 
 
 class ProductDetailView(generic.FormView):
@@ -90,7 +131,7 @@ class ProductDetailView(generic.FormView):
 
         return super(ProductDetailView, self).form_valid(form)
 
-    def get_context_data(self, **kwargs) -> Dict[str, Any]:
+    def get_context_data(self, **kwargs) ->     Dict[str, Any]:
         context = super(ProductDetailView, self).get_context_data(**kwargs)
         context['product'] = self.get_object()
         return context

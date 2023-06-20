@@ -30,6 +30,8 @@ urlpatterns: List[URLPattern] = [
         view=views.RemoveFromCartView.as_view(),
         name='remove-from-cart',
     ),
+    path('results/', views.SearchView.as_view(), name='search'),
+    path('fresults/', views.FilterView.as_view(), name='filter'),
 ]
 
 app_name: str = 'cart'
